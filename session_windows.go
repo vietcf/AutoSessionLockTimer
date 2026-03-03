@@ -10,6 +10,7 @@ import (
 
 const (
 	wmWtsSessionChange = 0x02B1
+	wtsSessionLogon    = 0x5
 	wtsSessionLock     = 0x7
 	wtsSessionUnlock   = 0x8
 )
@@ -73,6 +74,8 @@ func listenSessionEvents(state *TimerState) error {
 		switch msg {
 		case wmWtsSessionChange:
 			switch wParam {
+			case wtsSessionLogon:
+				state.onUnlock()
 			case wtsSessionUnlock:
 				state.onUnlock()
 			case wtsSessionLock:

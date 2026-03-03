@@ -90,7 +90,7 @@ func ensureConfigExists(path string) error {
 
 func updateTrayTooltip(state *TimerState) {
 	mins := state.elapsedMinutesSinceLastUnlock()
-	systray.SetTooltip(fmt.Sprintf("Auto Lock Session Timer - %d minutes since last logon", mins))
+	systray.SetTooltip(fmt.Sprintf("Auto Lock Session Timer - %d minutes since last unlock", mins))
 }
 
 func showLockTimeDialog(current int) (minutes int, saved bool, err error) {
