@@ -9,7 +9,7 @@ AutoLock Session Timer is a lightweight Windows tray app that locks the current 
 - Single instance only (double-click will not start another instance).
 - Configure lock minutes from tray menu.
 - Live tray tooltip:
-  - `Auto Lock Session Timer - X minutes since last logon`
+  - `Auto Lock Session Timer - X minutes since last unlock`
 - Optional auto-start at Windows sign-in (HKCU Run key).
 
 ## Requirements
@@ -59,6 +59,16 @@ Example:
 }
 ```
 
+Parameter meanings:
+
+- `lock_minutes`:
+  - Number of minutes counted from the most recent session unlock/logon.
+  - When elapsed time reaches this value, the app calls `LockWorkStation()`.
+  - Must be a positive integer (for example: `5`, `15`, `30`).
+- `enabled`:
+  - `true`: auto-lock timer is active.
+  - `false`: auto-lock timer is disabled (tray app still runs).
+
 Notes:
 
 - If `config.json` does not exist, app runs with defaults (`lock_minutes=15`, `enabled=true`).
@@ -69,6 +79,7 @@ Notes:
 - On session unlock/logon: reset timer to 0 and start counting (if enabled).
 - On session lock: stop counting.
 - When elapsed time reaches `lock_minutes`: call `LockWorkStation()`.
+- Session notifications are handled through a hidden Win32 window message loop (`WM_WTSSESSION_CHANGE`) bound to a single OS thread for reliable lock/unlock event delivery.
 
 ## Single Instance
 
@@ -99,3 +110,6 @@ Build `AutoLock.exe` first, then compile the `.iss` script to create an installe
   - Use tray `Configure Lock Time` and confirm value > 0.
 - Multiple instances appear:
   - End all `AutoLock.exe` in Task Manager, then start once.
+- Timer does not reset after unlock:
+  - Ensure you are running the latest `AutoLock.exe` build.
+  - Exit the tray app completely and start it again after replacing the executable.

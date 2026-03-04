@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"runtime"
 	"syscall"
 	"unsafe"
 )
@@ -33,6 +34,8 @@ var (
 
 	modKernel32          = syscall.NewLazyDLL("kernel32.dll")
 	procGetModuleHandleW = modKernel32.NewProc("GetModuleHandleW")
+
+	sessionWndProc uintptr
 )
 
 type (
@@ -67,10 +70,14 @@ type MSG struct {
 }
 
 func listenSessionEvents(state *TimerState) error {
+	// The message-only window and its message loop must stay on one OS thread.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
 	className, _ := syscall.UTF16PtrFromString("AutoLockSessionTimerHiddenWindow")
 	instance := getModuleHandle()
 
-	wndProc := syscall.NewCallback(func(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr {
+	sessionWndProc = syscall.NewCallback(func(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr {
 		switch msg {
 		case wmWtsSessionChange:
 			switch wParam {
@@ -88,7 +95,7 @@ func listenSessionEvents(state *TimerState) error {
 
 	wcx := WNDCLASSEX{
 		Size:      uint32(unsafe.Sizeof(WNDCLASSEX{})),
-		WndProc:   wndProc,
+		WndProc:   sessionWndProc,
 		Instance:  instance,
 		ClassName: className,
 	}
