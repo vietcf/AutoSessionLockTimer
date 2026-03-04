@@ -29,18 +29,38 @@ func newTimerState(cfg Config) *TimerState {
 func (s *TimerState) updateConfig(cfg Config) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	wasEnabled := s.cfg.Enabled
 	s.cfg = cfg
 	if !cfg.Enabled {
 		s.running = false
+		return
+	}
+	if !s.isLocked {
+		s.running = true
+		if !wasEnabled {
+			// Restart counting from now when timer is re-enabled.
+			s.lastUnlock = time.Now()
+			s.lockedFired = false
+		}
 	}
 }
 
 func (s *TimerState) setEnabled(enabled bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	wasEnabled := s.cfg.Enabled
 	s.cfg.Enabled = enabled
 	if !enabled {
 		s.running = false
+		return
+	}
+	if !s.isLocked {
+		s.running = true
+		if !wasEnabled {
+			// Start a fresh countdown when user clicks Start.
+			s.lastUnlock = time.Now()
+			s.lockedFired = false
+		}
 	}
 }
 
