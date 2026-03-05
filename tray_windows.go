@@ -188,18 +188,62 @@ func buildICO() []byte {
 	binary.LittleEndian.PutUint16(buf[off+14:off+16], 32)
 	binary.LittleEndian.PutUint32(buf[off+20:off+24], uint32(xorSize+andSize))
 
-	// XOR bitmap (BGRA), bottom-up.
 	pixelOff := off + dibSize
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
-			i := pixelOff + ((h-1-y)*w+x)*4
-			buf[i+0] = 215 // B
-			buf[i+1] = 120 // G
-			buf[i+2] = 0   // R
-			buf[i+3] = 255 // A
+	setPixel := func(x, y int, r, g, b, a byte) {
+		if x < 0 || x >= w || y < 0 || y >= h {
+			return
+		}
+		i := pixelOff + ((h-1-y)*w+x)*4
+		buf[i+0] = b
+		buf[i+1] = g
+		buf[i+2] = r
+		buf[i+3] = a
+	}
+
+	glass := [4]byte{66, 74, 84, 255}
+	sand := [4]byte{220, 170, 92, 255}
+	shine := [4]byte{228, 235, 245, 220}
+
+	// Frame
+	for x := 4; x <= 11; x++ {
+		setPixel(x, 2, glass[0], glass[1], glass[2], glass[3])
+		setPixel(x, 13, glass[0], glass[1], glass[2], glass[3])
+	}
+	for y := 3; y <= 12; y++ {
+		setPixel(4, y, glass[0], glass[1], glass[2], glass[3])
+		setPixel(11, y, glass[0], glass[1], glass[2], glass[3])
+	}
+
+	// Upper sand
+	for y := 4; y <= 6; y++ {
+		x0 := 5 + (y - 4)
+		x1 := 10 - (y - 4)
+		for x := x0; x <= x1; x++ {
+			setPixel(x, y, sand[0], sand[1], sand[2], sand[3])
 		}
 	}
 
-	// AND mask (all zeros => opaque)
+	// Narrow neck
+	setPixel(7, 7, sand[0], sand[1], sand[2], sand[3])
+	setPixel(8, 7, sand[0], sand[1], sand[2], sand[3])
+	setPixel(7, 8, sand[0], sand[1], sand[2], sand[3])
+	setPixel(8, 8, sand[0], sand[1], sand[2], sand[3])
+
+	// Lower sand pile
+	for y := 9; y <= 11; y++ {
+		x0 := 7 - (11 - y)
+		x1 := 8 + (11 - y)
+		for x := x0; x <= x1; x++ {
+			setPixel(x, y, sand[0], sand[1], sand[2], sand[3])
+		}
+	}
+
+	// Glass highlights
+	setPixel(5, 3, shine[0], shine[1], shine[2], shine[3])
+	setPixel(5, 4, shine[0], shine[1], shine[2], shine[3])
+	setPixel(10, 11, shine[0], shine[1], shine[2], shine[3])
+	setPixel(10, 12, shine[0], shine[1], shine[2], shine[3])
+
+	// AND mask (all zeros). Transparent background is controlled by alpha.
 	return buf
 }
