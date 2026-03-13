@@ -1,6 +1,6 @@
 ﻿# AutoLock Session Timer
 
-AutoLock Session Timer is a lightweight Windows tray app that locks the current user session after a configured number of minutes since the last session logon/unlock.
+AutoLock Session Timer is a lightweight Windows tray app built around a Pomodoro-style workflow. It helps you run focused work sessions, then automatically locks the current Windows session when the configured timer reaches the end of a cycle.
 
 ## Demo
 
